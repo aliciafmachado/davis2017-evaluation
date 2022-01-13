@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from davis2017.evaluation import DAVISEvaluation
 
-default_davis_path = '/path/to/the/folder/DAVIS'
+default_davis_path = '../DAVIS/2017/trainval'
 
 time_start = time()
 parser = argparse.ArgumentParser()
