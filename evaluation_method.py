@@ -20,6 +20,8 @@ parser.add_argument('--task', type=str, help='Task to evaluate the results', def
                     choices=['semi-supervised', 'unsupervised'])
 parser.add_argument('--results_path', type=str, help='Path to the folder containing the sequences folders',
                     required=True)
+parser.add_argument('--dataset', type=str, help='Which davis dataset to use: davis2016 or davis2017', default='davis2017')
+parser.add_argument('--imagesets_path', help='path to imagesets', default=None)
 args, _ = parser.parse_known_args()
 csv_name_global = f'global_results-{args.set}.csv'
 csv_name_per_sequence = f'per-sequence_results-{args.set}.csv'
@@ -34,7 +36,8 @@ if os.path.exists(csv_name_global_path) and os.path.exists(csv_name_per_sequence
 else:
     print(f'Evaluating sequences for the {args.task} task...')
     # Create dataset and evaluate
-    dataset_eval = DAVISEvaluation(davis_root=args.davis_path, task=args.task, gt_set=args.set)
+    dataset_eval = DAVISEvaluation(davis_root=args.davis_path, task=args.task, gt_set=args.set, 
+                                   dataset=args.dataset, imagesets_path=args.imagesets_path)
     metrics_res = dataset_eval.evaluate(args.results_path)
     J, F = metrics_res['J'], metrics_res['F']
 

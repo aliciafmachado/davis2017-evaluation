@@ -5,8 +5,9 @@ import sys
 
 
 class Results(object):
-    def __init__(self, root_dir):
+    def __init__(self, root_dir, dataset= 'davis2017'):
         self.root_dir = root_dir
+        self.dataset = dataset
 
     def _read_mask(self, sequence, frame_id):
         try:
@@ -24,6 +25,10 @@ class Results(object):
         masks = np.zeros((len(masks_id), *mask_0.shape))
         for ii, m in enumerate(masks_id):
             masks[ii, ...] = self._read_mask(sequence, m)
+            if self.dataset == 'davis2016':
+                js, ks = np.where(masks[ii, ...] == 255)
+                masks[ii, js, ks] = 1
+
         num_objects = int(np.max(masks))
         tmp = np.ones((num_objects, *masks.shape))
         tmp = tmp * np.arange(1, num_objects + 1)[:, None, None, None]

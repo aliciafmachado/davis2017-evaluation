@@ -11,7 +11,8 @@ class DAVIS(object):
     DATASET_WEB = 'https://davischallenge.org/davis2017/code.html'
     VOID_LABEL = 255
 
-    def __init__(self, root, task='unsupervised', subset='val', sequences='all', resolution='480p', codalab=False):
+    def __init__(self, root, task='unsupervised', subset='val', sequences='all', resolution='480p', codalab=False, 
+                 dataset='davis2017', imagesets_path=None):
         """
         Class to read the DAVIS dataset
         :param root: Path to the DAVIS folder that contains JPEGImages, Annotations, etc. folders.
@@ -31,8 +32,17 @@ class DAVIS(object):
         self.img_path = os.path.join(self.root, 'JPEGImages', resolution)
         annotations_folder = 'Annotations' if task == 'semi-supervised' else 'Annotations_unsupervised'
         self.mask_path = os.path.join(self.root, annotations_folder, resolution)
+        self.dataset = dataset
+
         year = '2019' if task == 'unsupervised' and (subset == 'test-dev' or subset == 'test-challenge') else '2017'
-        self.imagesets_path = os.path.join(self.root, 'ImageSets', year)
+        if dataset == 'davis2016':
+            # When using the dataset davis in 2016, we don't have the year in the path, but the quality of the images
+            year = '480p'
+
+        if imagesets_path == None:
+            self.imagesets_path = os.path.join(self.root, 'ImageSets', year)
+        else:
+            self.imagesets_path = imagesets_path
 
         self._check_directories()
 
@@ -46,6 +56,7 @@ class DAVIS(object):
 
         for seq in sequences_names:
             images = np.sort(glob(os.path.join(self.img_path, seq, '*.jpg'))).tolist()
+
             if len(images) == 0 and not codalab:
                 raise FileNotFoundError(f'Images for sequence {seq} not found.')
             self.sequences[seq]['images'] = images
@@ -72,8 +83,13 @@ class DAVIS(object):
         obj = np.array(Image.open(self.sequences[sequence][obj_type][0]))
         all_objs = np.zeros((len(self.sequences[sequence][obj_type]), *obj.shape))
         obj_id = []
+        
         for i, obj in enumerate(self.sequences[sequence][obj_type]):
             all_objs[i, ...] = np.array(Image.open(obj))
+            if obj_type == 'masks' and self.dataset == 'davis2016':
+                js, ks = np.where(all_objs[i, ...] == 255)
+                all_objs[i, js, ks] = 1
+                
             obj_id.append(''.join(obj.split('/')[-1].split('.')[:-1]))
         return all_objs, obj_id
 
